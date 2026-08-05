@@ -2,20 +2,20 @@ import { NextResponse } from "next/server";
 import { readAdminSessionFromRequest } from "@/lib/admin-auth";
 import { getAdminView, ADMIN_VIEWS, DEFAULT_ADMIN_VIEW } from "@/lib/admin-views";
 import { saveRelease } from "@/lib/releases";
-import { createRelease, listReleases } from "@/lib/supabase-releases";
-import { buildUnifiedInsertForKind, SUBMISSION_KINDS } from "@/lib/unified-mapping";
+import { listReleases } from "@/lib/supabase-releases";
+import { SUBMISSION_KINDS } from "@/lib/unified-mapping";
 import {
   adminAudioPayloadSchema,
-  publishingPayloadSchema,
-  videoPayloadSchema
+  adminPublishingPayloadSchema,
+  adminVideoPayloadSchema
 } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 const SCHEMAS_BY_KIND = {
   audio: adminAudioPayloadSchema,
-  video: videoPayloadSchema,
-  publishing: publishingPayloadSchema
+  video: adminVideoPayloadSchema,
+  publishing: adminPublishingPayloadSchema
 };
 
 function extractWorkflow(payload) {
@@ -88,29 +88,14 @@ export async function POST(request) {
     }
 
     const payload = SCHEMAS_BY_KIND[kind].parse(body?.payload || {});
-    const workflow = extractWorkflow(payload);
+    const result = await saveRelease({
+      kind,
+      payload,
+      session,
+      workflow: extractWorkflow(payload)
+    });
 
-    if (kind === "audio") {
-      const result = await saveRelease({
-        kind,
-        payload,
-        session,
-        workflow,
-        asAdmin: true
-      });
-
-      return NextResponse.json(result);
-    }
-
-    // Video/publishing rows are created Supabase-first until their Notion
-    // property builders are added.
-    const workflowDefaults =
-      kind === "publishing" ? { status: "External" } : { status: "Not started" };
-    const row = buildUnifiedInsertForKind(kind, payload, workflow || workflowDefaults, session);
-
-    const created = await createRelease(row);
-
-    return NextResponse.json({ ok: true, id: created?.unified_record_id, notionSkipped: true });
+    return NextResponse.json({ ...result, id: `notion:${result.pageId}` });
   } catch (error) {
     const message =
       error?.issues?.[0]?.message || error?.message || "Could not create the release.";

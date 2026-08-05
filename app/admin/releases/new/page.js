@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ReleaseForm from "@/components/admin/release-form";
 import { KIND_LABELS } from "@/lib/admin-form-config";
-import { INITIAL_FORM_VALUES } from "@/lib/release-config";
+import {
+  INITIAL_FORM_VALUES,
+  INITIAL_PUBLISHING_VALUES,
+  INITIAL_VIDEO_VALUES
+} from "@/lib/release-config";
 
 const KIND_DESCRIPTIONS = {
   audio: "Distribution releases: singles, EPs, and albums headed to DSPs.",
@@ -16,28 +20,15 @@ const BLANK_BY_KIND = {
   audio: {
     ...INITIAL_FORM_VALUES,
     releaseType: "single",
-    status: "Not Started",
+    status: "Not started",
     productVersion: "All DSPs (Main)"
   },
   video: {
-    title: "",
-    mainArtists: "",
-    labelName: "",
-    videoApplies: [],
-    releaseDate: "",
-    socialReleaseDate: "",
-    notes: "",
-    status: "Not Started"
+    ...INITIAL_VIDEO_VALUES,
+    status: "Not started"
   },
   publishing: {
-    title: "",
-    mainArtists: "",
-    labelName: "",
-    writersSplits: "",
-    publisherInformation: "",
-    producerCredits: "",
-    releaseDate: "",
-    notes: "",
+    ...INITIAL_PUBLISHING_VALUES,
     status: "External"
   }
 };
@@ -60,7 +51,7 @@ export default function AdminNewReleasePage() {
     }
 
     if (body.id) {
-      router.push(`/admin/releases/${body.id}`);
+      router.push(`/admin/releases/${encodeURIComponent(body.id)}`);
     } else {
       router.push("/admin/releases?view=upcoming");
     }

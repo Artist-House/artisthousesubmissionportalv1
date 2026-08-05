@@ -9,6 +9,7 @@ import {
 } from "@/lib/session";
 import { isEmailAllowed } from "@/lib/notion";
 import { sendAccessRequestEmail } from "@/lib/email";
+import { INTERNAL_EMAIL_DOMAIN } from "@/lib/release-config";
 
 export const runtime = "nodejs";
 
@@ -64,7 +65,8 @@ export async function GET(request) {
 
   const profile = await userInfoResponse.json();
   const email = String(profile.email).trim().toLowerCase();
-  const authorized = await isEmailAllowed(email);
+  // Artist House team members always get in; everyone else goes through the Notion allowlist.
+  const authorized = email.endsWith(INTERNAL_EMAIL_DOMAIN) || (await isEmailAllowed(email));
   const sessionToken = await createSessionToken({
     email,
     name: profile.name || "",
@@ -79,8 +81,11 @@ export async function GET(request) {
 
     if (!alreadyRequested) {
       try {
-        await sendAccessRequestEmail({ email, name: profile.name || "" });
-        response.cookies.set(ACCESS_REQUEST_COOKIE_NAME, email, getSessionCookieOptions());
+        const sent = await sendAccessRequestEmail({ email, name: profile.name || "" });
+
+        if (sent) {
+          response.cookies.set(ACCESS_REQUEST_COOKIE_NAME, email, getSessionCookieOptions());
+        }
       } catch (error) {
         console.error("Access request email failed:", error);
       }

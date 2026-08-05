@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
 import { readAdminSessionFromRequest } from "@/lib/admin-auth";
 import { saveRelease } from "@/lib/releases";
-import { getRelease, updateRelease } from "@/lib/supabase-releases";
-import { buildUnifiedPatchForKind, deriveKindFromRow } from "@/lib/unified-mapping";
+import { getRelease } from "@/lib/supabase-releases";
+import { deriveKindFromRow } from "@/lib/unified-mapping";
 import {
   adminAudioPayloadSchema,
-  publishingPayloadSchema,
-  videoPayloadSchema
+  adminPublishingPayloadSchema,
+  adminVideoPayloadSchema
 } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 const SCHEMAS_BY_KIND = {
   audio: adminAudioPayloadSchema,
-  video: videoPayloadSchema,
-  publishing: publishingPayloadSchema
+  video: adminVideoPayloadSchema,
+  publishing: adminPublishingPayloadSchema
 };
 
 function extractWorkflow(payload) {
@@ -44,7 +44,7 @@ export async function GET(request, { params }) {
 
   try {
     const { id } = await params;
-    const row = await getRelease(id);
+    const row = await getRelease(decodeURIComponent(id));
 
     if (!row) {
       return NextResponse.json({ error: "Release not found." }, { status: 404 });
@@ -68,48 +68,32 @@ export async function PATCH(request, { params }) {
 
   try {
     const { id } = await params;
-    const row = await getRelease(id);
+    const row = await getRelease(decodeURIComponent(id));
 
     if (!row) {
       return NextResponse.json({ error: "Release not found." }, { status: 404 });
     }
 
-    const body = await request.json();
-    const kind = deriveKindFromRow(row);
-    const schema = SCHEMAS_BY_KIND[kind] || adminAudioPayloadSchema;
-    const payload = schema.parse(body?.payload || {});
-    const workflow = extractWorkflow(payload);
-
-    if (kind === "audio" && row.notion_page_id) {
-      const result = await saveRelease({
-        kind,
-        payload,
-        session,
-        notionPageId: row.notion_page_id,
-        workflow,
-        asAdmin: true
-      });
-
-      return NextResponse.json(result);
-    }
-
-    // Video/publishing rows (and audio rows with no Notion correlation yet)
-    // update Supabase only until Phase 0 reconciles their Notion mappings.
-    const patch =
-      kind === "audio"
-        ? null
-        : buildUnifiedPatchForKind(kind, payload, workflow);
-
-    if (!patch) {
+    if (!row.notion_page_id) {
       return NextResponse.json(
-        { error: "This release has no Notion link yet; edit it in Notion or re-sync first." },
+        { error: "This record has no linked Notion page, so it can't be edited here yet." },
         { status: 409 }
       );
     }
 
-    const updated = await updateRelease(id, patch);
+    const body = await request.json();
+    const kind = deriveKindFromRow(row);
+    const payload = SCHEMAS_BY_KIND[kind].parse(body?.payload || {});
 
-    return NextResponse.json({ ok: true, id: updated?.unified_record_id, notionSkipped: true });
+    const result = await saveRelease({
+      kind,
+      payload,
+      session,
+      notionPageId: row.notion_page_id,
+      workflow: extractWorkflow(payload)
+    });
+
+    return NextResponse.json({ ...result, id: row.unified_record_id });
   } catch (error) {
     const message =
       error?.issues?.[0]?.message || error?.message || "Could not update the release.";
