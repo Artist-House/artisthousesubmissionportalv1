@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createReleaseSubmission, updateReleaseSubmission } from "@/lib/notion";
+import { normalizeDistributor } from "@/lib/release-config";
+import { saveRelease } from "@/lib/releases";
 import { readSessionToken, SESSION_COOKIE_NAME } from "@/lib/session";
 import { releasePayloadSchema } from "@/lib/validation";
 
@@ -25,7 +26,7 @@ export async function POST(request) {
     const normalizedPayload = {
       ...parsedPayload,
       dealTags: ["Distribution Only"],
-      distributor: "Fuga"
+      distributor: normalizeDistributor("Fuga")
     };
 
     const lyricsFile = formData.get("lyricsFile");
@@ -36,13 +37,18 @@ export async function POST(request) {
       coverArtFile: coverArtFile instanceof File ? coverArtFile : null
     };
 
-    const createdPage = normalizedPayload.pageId
-      ? await updateReleaseSubmission(normalizedPayload.pageId, normalizedPayload, filePayload, session)
-      : await createReleaseSubmission(normalizedPayload, filePayload, session);
+    const result = await saveRelease({
+      kind: "audio",
+      payload: normalizedPayload,
+      files: filePayload,
+      session,
+      notionPageId: normalizedPayload.pageId || null
+    });
 
     return NextResponse.json({
       ok: true,
-      pageId: createdPage.id
+      pageId: result.pageId,
+      syncWarning: result.syncWarning || undefined
     });
   } catch (error) {
     const message =
