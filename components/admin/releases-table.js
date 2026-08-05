@@ -44,11 +44,32 @@ function CellValue({ column, row }) {
     case "date":
       return formatDate(value);
     case "notion-date":
-      // Notion-style jsonb date: { start, end, time_zone }.
-      return formatDate(value?.start);
+      // Notion-style jsonb date, either { start, ... } directly or wrapped as
+      // { type: "date", date: { start, ... } } (formula/rollup shape).
+      return formatDate(value?.start || value?.date?.start);
     case "notion-formula":
       // Notion formula value: { type: "string", string: "..." }.
       return value?.string || "—";
+    case "url":
+      return value ? (
+        <a
+          href={value}
+          target="_blank"
+          rel="noreferrer"
+          className="admin-table__link admin-table__clip"
+          onClick={(event) => event.stopPropagation()}
+          title={value}
+        >
+          {value}
+        </a>
+      ) : (
+        "—"
+      );
+    case "relation":
+      // Notion relation: array of linked page ids — show the count.
+      return Array.isArray(value) && value.length
+        ? `${value.length} linked`
+        : "—";
     case "badge":
       return value ? <span className={statusBadgeClass(value)}>{value}</span> : "—";
     case "tags":
@@ -60,7 +81,13 @@ function CellValue({ column, row }) {
         <span className="admin-check admin-check--off">✕</span>
       );
     default:
-      return value || "—";
+      return value ? (
+        <span className="admin-table__clip" title={String(value)}>
+          {String(value)}
+        </span>
+      ) : (
+        "—"
+      );
   }
 }
 

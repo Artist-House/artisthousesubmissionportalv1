@@ -195,6 +195,14 @@
   color: var(--accent-red);
 }
 
+.admin-table__clip {
+  display: block;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-badge {
   display: inline-block;
   border: 1px solid var(--light-gray);
