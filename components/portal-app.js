@@ -835,6 +835,9 @@ export default function PortalApp({ initialSession }) {
                         ))}
                       </div>
                     ) : null}
+                    {isInternal && formKind === "release" ? (
+                      <div className="release-switcher__divider" aria-hidden="true" />
+                    ) : null}
                     {formKind === "release" ? (
                     <div className="release-switcher__grid">
                       <button
