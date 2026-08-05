@@ -373,6 +373,12 @@
   outline-offset: 1px;
 }
 
+.admin-field__error {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-red);
+}
+
 .admin-multiselect {
   display: flex;
   flex-wrap: wrap;

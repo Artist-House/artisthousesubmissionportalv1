@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { FIELDS_BY_KIND, KIND_LABELS } from "@/lib/admin-form-config";
+import { FIELDS_BY_KIND, getAdminFormErrors, KIND_LABELS } from "@/lib/admin-form-config";
 
 function FieldInput({ field, value, onChange }) {
   if (field.input === "textarea") {
@@ -92,12 +92,17 @@ export default function ReleaseForm({ kind, initialValues, onSubmit, backHref })
   const [values, setValues] = useState(initialValues);
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const fields = FIELDS_BY_KIND[kind] || [];
   const sections = useMemo(() => {
     const grouped = [];
 
     for (const field of fields) {
+      if (field.showIf && !field.showIf(values)) {
+        continue;
+      }
+
       const existing = grouped.find((section) => section.title === field.section);
 
       if (existing) {
@@ -108,7 +113,7 @@ export default function ReleaseForm({ kind, initialValues, onSubmit, backHref })
     }
 
     return grouped;
-  }, [fields]);
+  }, [fields, values]);
 
   function handleChange(key, value) {
     setValues((previous) => ({ ...previous, [key]: value }));
@@ -116,6 +121,17 @@ export default function ReleaseForm({ kind, initialValues, onSubmit, backHref })
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    const errors = getAdminFormErrors(kind, values);
+
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      setStatus("error");
+      setMessage("Please complete the required fields before saving.");
+      return;
+    }
+
+    setFieldErrors({});
     setStatus("saving");
     setMessage("");
 
@@ -163,6 +179,9 @@ export default function ReleaseForm({ kind, initialValues, onSubmit, backHref })
                   {field.required ? " *" : ""}
                 </label>
                 <FieldInput field={field} value={values[field.key]} onChange={handleChange} />
+                {fieldErrors[field.key] ? (
+                  <span className="admin-field__error">{fieldErrors[field.key]}</span>
+                ) : null}
               </div>
             ))}
           </div>
