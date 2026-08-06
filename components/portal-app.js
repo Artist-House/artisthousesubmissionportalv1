@@ -20,6 +20,7 @@ import {
 } from "@/lib/release-config";
 import { ALL_SUBGENRES, SUBGENRE_GROUPS } from "@/lib/subgenres";
 import { getMissingFieldsForMatch } from "@/lib/release-fields";
+import FugaSopModal from "@/components/fuga-sop-modal";
 
 const FORM_KIND_TITLES = {
   release: "Release (Distribution)",
@@ -267,6 +268,7 @@ export default function PortalApp({ initialSession }) {
     thumbnailFile: null
   });
   const [errors, setErrors] = useState({});
+  const [showSop, setShowSop] = useState(false);
   const [status, setStatus] = useState({
     type: "idle",
     message: ""
@@ -657,6 +659,7 @@ export default function PortalApp({ initialSession }) {
 
   return (
     <div className="site-shell">
+      {showSop ? <FugaSopModal onClose={() => setShowSop(false)} /> : null}
       <header className="header">
         <div className="header__inner">
           <a href="https://www.artisthouse.world/" aria-label="Artist House home" target="_blank" rel="noreferrer">
@@ -1680,13 +1683,9 @@ export default function PortalApp({ initialSession }) {
                     <p className="step-description">
                       Check the Release Schedule first to avoid duplicate submissions. This form is for
                       video releases distributed through FUGA. See the{" "}
-                      <a
-                        href="https://www.notion.so/FUGA-Video-Delivery-SOP-dd5a6fbed26541debddbbad70fd43849?pvs=4"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
+                      <button type="button" className="sop-link" onClick={() => setShowSop(true)}>
                         FUGA Video Delivery SOP
-                      </a>{" "}
+                      </button>{" "}
                       for requirements before submitting.
                     </p>
 
@@ -1895,7 +1894,11 @@ export default function PortalApp({ initialSession }) {
                           <div className="field-help">An existing thumbnail will be kept unless you replace it.</div>
                         ) : null}
                         <div className="field-help">
-                          See the Video Delivery SOP for specs and dimensions. FOR APPLE MUSIC: the thumbnail
+                          See the{" "}
+                          <button type="button" className="sop-link" onClick={() => setShowSop(true)}>
+                            Video Delivery SOP
+                          </button>{" "}
+                          for specs and dimensions. FOR APPLE MUSIC: the thumbnail
                           must be a still image from the video — if the official thumbnail differs from the
                           video, upload a separate thumbnail for Apple Music delivery.
                         </div>

@@ -433,6 +433,121 @@ main {
   margin-top: 28px;
 }
 
+/* FUGA Video Delivery SOP modal */
+.sop-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sop-link:hover {
+  color: var(--accent-red);
+}
+
+.sop-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 200;
+}
+
+.sop-modal {
+  background: var(--near-black);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 22px;
+  width: min(760px, 100%);
+  max-height: min(82vh, 900px);
+  display: flex;
+  flex-direction: column;
+  color: var(--off-white);
+}
+
+.sop-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.12);
+}
+
+.sop-modal__header h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 400;
+}
+
+.sop-modal__close {
+  background: none;
+  border: 1px solid rgba(250, 250, 250, 0.25);
+  border-radius: 999px;
+  color: var(--off-white);
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.sop-modal__close:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.sop-modal__body {
+  padding: 22px 28px 32px;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.sop-modal__body h4 {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-red);
+  margin: 26px 0 10px;
+}
+
+.sop-modal__body h5 {
+  font-size: 1rem;
+  margin: 18px 0 6px;
+}
+
+.sop-modal__body ul {
+  margin: 6px 0 12px;
+  padding-left: 20px;
+}
+
+.sop-modal__body li {
+  margin-bottom: 4px;
+}
+
+.sop-modal__subhead {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(250, 250, 250, 0.6);
+  margin: 12px 0 4px;
+}
+
+.sop-modal__callout {
+  border: 1px solid var(--accent-red);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: rgba(240, 82, 61, 0.08);
+}
+
 .release-option {
   text-align: left;
   padding: 22px;
