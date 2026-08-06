@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }) {
         <nav className="admin-header__nav">
           <Link href="/admin/releases?view=upcoming">Releases</Link>
           <Link href="/admin/calendar">Calendar</Link>
-          <Link href="/admin/allowed-users">Allowed Users</Link>
+          <Link href="/admin/allowed-users">Users</Link>
           <Link href="/admin/releases/new" className="admin-header__new">
             + New Submission
           </Link>

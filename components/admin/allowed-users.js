@@ -143,7 +143,7 @@ export default function AllowedUsers() {
   return (
     <div className="admin-detail">
       <div className="admin-detail__header">
-        <h1 className="admin-detail__title">Allowed Users</h1>
+        <h1 className="admin-detail__title">Users</h1>
         <span className="admin-detail__kind">{users.length} allowed</span>
       </div>
       <p className="admin-count" style={{ margin: "4px 0 20px" }}>
