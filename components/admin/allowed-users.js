@@ -144,7 +144,9 @@ export default function AllowedUsers() {
     <div className="admin-detail">
       <div className="admin-detail__header">
         <h1 className="admin-detail__title">Users</h1>
-        <span className="admin-detail__kind">{users.length} allowed</span>
+        <span className="admin-detail__kind">
+          {users.length} user{users.length === 1 ? "" : "s"}
+        </span>
       </div>
       <p className="admin-count" style={{ margin: "4px 0 20px" }}>
         Emails that can sign in to the submission portal. Changes update the Notion allowlist and
