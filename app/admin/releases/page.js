@@ -1,14 +1,22 @@
-import ReleasesTable from "@/components/admin/releases-table";
+import ReleasesWorkspace from "@/components/admin/releases-workspace";
 import { DEFAULT_ADMIN_VIEW } from "@/lib/admin-views";
+import { listSavedViews } from "@/lib/saved-views";
 
 export default async function AdminReleasesPage({ searchParams }) {
   const params = await searchParams;
 
+  let savedViews = [];
+
+  try {
+    savedViews = await listSavedViews();
+  } catch {
+    savedViews = [];
+  }
+
   return (
-    <ReleasesTable
-      initialView={params?.view || DEFAULT_ADMIN_VIEW}
-      initialQuery={params?.q || ""}
-      initialPage={Number(params?.page) || 1}
+    <ReleasesWorkspace
+      initialViews={savedViews}
+      initialActive={params?.view || DEFAULT_ADMIN_VIEW}
     />
   );
 }

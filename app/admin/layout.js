@@ -6,7 +6,7 @@ import SignOutButton from "@/components/admin/sign-out-button";
 import "./admin.css";
 
 export const metadata = {
-  title: "Artist House — Release Schedule"
+  title: "Artist House Beacon Admin"
 };
 
 export default async function AdminLayout({ children }) {
@@ -22,7 +22,7 @@ export default async function AdminLayout({ children }) {
       <header className="admin-header">
         <div className="admin-header__brand">
           <Link href="/admin/releases?view=upcoming" className="admin-header__title">
-            Artist House <span>Release Schedule</span>
+            Artist House <span>Beacon Admin</span>
           </Link>
         </div>
         <nav className="admin-header__nav">
