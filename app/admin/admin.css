@@ -1033,6 +1033,37 @@ th:hover .admin-th-resize {
   border-radius: 0;
 }
 
+/* Allowed users */
+.admin-allowlist__add {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.admin-allowlist__add input {
+  max-width: 340px;
+}
+
+.admin-allowlist__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.admin-allowlist__delete:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.admin-allowlist__edit {
+  border: 1px solid var(--accent-red);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  min-width: 260px;
+}
+
 /* Calendar extras */
 .admin-calendar__daytop {
   display: flex;

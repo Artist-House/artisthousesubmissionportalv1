@@ -27,11 +27,11 @@ export default function FugaSopModal({ onClose }) {
         className="sop-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="FUGA Video Delivery SOP"
+        aria-label="Video Delivery SOP"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="sop-modal__header">
-          <h3>FUGA Video Delivery SOP</h3>
+          <h3>Video Delivery SOP</h3>
           <button type="button" className="sop-modal__close" onClick={onClose} aria-label="Close">
             ✕
           </button>

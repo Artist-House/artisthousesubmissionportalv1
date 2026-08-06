@@ -1684,7 +1684,7 @@ export default function PortalApp({ initialSession }) {
                       Check the Release Schedule first to avoid duplicate submissions. This form is for
                       video releases distributed through FUGA. See the{" "}
                       <button type="button" className="sop-link" onClick={() => setShowSop(true)}>
-                        FUGA Video Delivery SOP
+                        Video Delivery SOP
                       </button>{" "}
                       for requirements before submitting.
                     </p>
