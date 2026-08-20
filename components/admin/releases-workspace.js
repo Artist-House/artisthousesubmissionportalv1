@@ -6,6 +6,8 @@ import { ADMIN_VIEWS } from "@/lib/admin-views";
 import { VIEW_LAYOUTS } from "@/lib/admin-properties";
 import ReleasesTable from "@/components/admin/releases-table";
 import SavedView from "@/components/admin/saved-view";
+import AddFieldDialog from "@/components/admin/add-field-dialog";
+import { PropertiesProvider, useProperties } from "@/components/admin/properties-context";
 
 const BUILTIN_ENTRIES = Object.entries(ADMIN_VIEWS).filter(([, definition]) => !definition.hidden);
 
@@ -20,11 +22,21 @@ const LAYOUT_ICONS = {
 // The admin release-schedule workspace: system views plus user-defined saved
 // views (Notion-style). Saved views are presentation only — creating, editing,
 // duplicating, reordering, or deleting them never touches release records.
-export default function ReleasesWorkspace({ initialViews, initialActive }) {
+export default function ReleasesWorkspace(props) {
+  return (
+    <PropertiesProvider>
+      <WorkspaceInner {...props} />
+    </PropertiesProvider>
+  );
+}
+
+function WorkspaceInner({ initialViews, initialActive }) {
   const router = useRouter();
   const [views, setViews] = useState(initialViews);
   const [active, setActive] = useState(initialActive);
   const [isCreating, setIsCreating] = useState(false);
+  const [isAddingField, setIsAddingField] = useState(false);
+  const { refresh: refreshProperties } = useProperties();
   const [createName, setCreateName] = useState("");
   const [createLayout, setCreateLayout] = useState("table");
   const [menuFor, setMenuFor] = useState(null);
@@ -229,7 +241,21 @@ export default function ReleasesWorkspace({ initialViews, initialActive }) {
         >
           + New View
         </button>
+        <button
+          type="button"
+          className="admin-view-tab admin-view-tab--new"
+          onClick={() => setIsAddingField(true)}
+        >
+          + Add Field
+        </button>
       </div>
+
+      {isAddingField ? (
+        <AddFieldDialog
+          onClose={() => setIsAddingField(false)}
+          onCreated={() => refreshProperties()}
+        />
+      ) : null}
 
       {isCreating ? (
         <form className="admin-create-view" onSubmit={handleCreate}>

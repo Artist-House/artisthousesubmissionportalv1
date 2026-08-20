@@ -1,26 +1,20 @@
 "use client";
 
+import { useProperties } from "@/components/admin/properties-context";
 import {
   OPERATOR_LABELS,
   OPERATORS_BY_TYPE,
   operatorUsesDateInput,
   propertyValueOptions,
-  getViewProperty,
-  VALUELESS_OPERATORS,
-  VIEW_PROPERTIES
+  VALUELESS_OPERATORS
 } from "@/lib/admin-properties";
 
 const SCALES = ["day", "week", "month", "quarter", "year"];
 const CHART_TYPES = ["bar", "line", "pie"];
 const AGGREGATIONS = ["count", "sum", "avg", "min", "max"];
-const DATE_PROPERTIES = VIEW_PROPERTIES.filter((property) =>
-  ["date", "formula-date"].includes(property.type)
-);
-const GROUPABLE_PROPERTIES = VIEW_PROPERTIES.filter((property) =>
-  ["select", "multiselect", "checkbox", "text"].includes(property.type)
-);
 
-function PropertySelect({ value, onChange, properties = VIEW_PROPERTIES, allowNone = false, noneLabel = "—" }) {
+
+function PropertySelect({ value, onChange, properties, allowNone = false, noneLabel = "—" }) {
   return (
     <select value={value || ""} onChange={(event) => onChange(event.target.value)}>
       {allowNone ? <option value="">{noneLabel}</option> : null}
@@ -34,6 +28,13 @@ function PropertySelect({ value, onChange, properties = VIEW_PROPERTIES, allowNo
 }
 
 export default function ViewSettings({ layout, config, updateConfig }) {
+  const { properties: allProperties, getProperty } = useProperties();
+  const dateProperties = allProperties.filter((property) =>
+    ["date", "formula-date"].includes(property.type)
+  );
+  const groupableProperties = allProperties.filter((property) =>
+    ["select", "multiselect", "checkbox", "text"].includes(property.type)
+  );
   const visible = Array.isArray(config.visibleProperties) ? config.visibleProperties : [];
   const filters = config.filters || { combinator: "and", rules: [] };
   const sorts = Array.isArray(config.sorts) ? config.sorts : [];
@@ -86,7 +87,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
             <PropertySelect
               value={config.dateProperty}
               onChange={(value) => updateConfig({ dateProperty: value })}
-              properties={DATE_PROPERTIES}
+              properties={dateProperties}
             />
             {layout === "timeline" ? (
               <>
@@ -134,6 +135,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
             <PropertySelect
               value={config.xProperty}
               onChange={(value) => updateConfig({ xProperty: value })}
+              properties={allProperties}
             />
             <label>Aggregation</label>
             <select
@@ -152,6 +154,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
                 <PropertySelect
                   value={config.yProperty}
                   onChange={(value) => updateConfig({ yProperty: value })}
+                  properties={allProperties}
                   allowNone
                 />
               </>
@@ -164,7 +167,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
         <section className="admin-view-settings__section">
           <div className="admin-detail__section-title">Card properties</div>
           <div className="admin-view-settings__properties">
-            {VIEW_PROPERTIES.map((property) => {
+            {allProperties.map((property) => {
               const cardProperties = Array.isArray(config.cardProperties)
                 ? config.cardProperties
                 : [];
@@ -196,7 +199,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
           <div className="admin-detail__section-title">Visible properties</div>
           <div className="admin-view-settings__visible">
             {visible.map((key) => {
-              const property = getViewProperty(key);
+              const property = getProperty(key);
 
               if (!property) {
                 return null;
@@ -223,7 +226,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
           <details className="admin-view-settings__all">
             <summary>Show / hide properties</summary>
             <div className="admin-view-settings__properties">
-              {VIEW_PROPERTIES.map((property) => (
+              {allProperties.map((property) => (
                 <label key={property.key} className="admin-view-settings__property">
                   <input
                     type="checkbox"
@@ -255,16 +258,17 @@ export default function ViewSettings({ layout, config, updateConfig }) {
           </div>
         ) : null}
         {filters.rules.map((rule, index) => {
-          const property = getViewProperty(rule.property) || VIEW_PROPERTIES[0];
+          const property = getProperty(rule.property) || allProperties[0];
           const operators = OPERATORS_BY_TYPE[property.type] || OPERATORS_BY_TYPE.text;
-          const options = propertyValueOptions(property);
+          const options = propertyValueOptions(property) || property.options || null;
 
           return (
             <div key={index} className="admin-view-settings__rule">
               <PropertySelect
                 value={rule.property}
+                properties={allProperties}
                 onChange={(value) => {
-                  const nextProperty = getViewProperty(value);
+                  const nextProperty = getProperty(value);
                   const nextOperators = OPERATORS_BY_TYPE[nextProperty.type] || [];
 
                   updateRule(index, {
@@ -344,6 +348,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
           <div key={index} className="admin-view-settings__rule">
             <PropertySelect
               value={sort.property}
+              properties={allProperties}
               onChange={(value) => updateSort(index, { property: value })}
             />
             <select
@@ -382,7 +387,7 @@ export default function ViewSettings({ layout, config, updateConfig }) {
             <PropertySelect
               value={config.groupBy}
               onChange={(value) => updateConfig({ groupBy: value })}
-              properties={GROUPABLE_PROPERTIES}
+              properties={groupableProperties}
               allowNone
               noneLabel="No grouping"
             />

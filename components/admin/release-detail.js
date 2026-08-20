@@ -1,6 +1,7 @@
 "use client";
 
 import ReleaseForm from "@/components/admin/release-form";
+import RecordExtras from "@/components/admin/record-extras";
 import { buildFormValuesFromUnifiedRow } from "@/lib/admin-form-config";
 
 export default function ReleaseDetail({ row, kind }) {
@@ -23,11 +24,14 @@ export default function ReleaseDetail({ row, kind }) {
   }
 
   return (
-    <ReleaseForm
-      kind={kind}
-      initialValues={initialValues}
-      onSubmit={handleSubmit}
-      backHref="/admin/releases?view=upcoming"
-    />
+    <>
+      <ReleaseForm
+        kind={kind}
+        initialValues={initialValues}
+        onSubmit={handleSubmit}
+        backHref="/admin/releases?view=upcoming"
+      />
+      <RecordExtras row={row} kind={kind} />
+    </>
   );
 }

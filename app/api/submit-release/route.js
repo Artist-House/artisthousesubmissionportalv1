@@ -48,9 +48,9 @@ export async function POST(request) {
     const rawPayload = JSON.parse(payloadText);
     const formKind = ["publishing", "video"].includes(rawPayload.formKind) ? rawPayload.formKind : "release";
 
-    if (formKind !== "release" && !isInternalEmail(session.email)) {
+    if (formKind === "publishing" && !isInternalEmail(session.email)) {
       return NextResponse.json(
-        { error: "Publishing and video forms are limited to Artist House team members." },
+        { error: "Publishing submissions are limited to Artist House team members." },
         { status: 403 }
       );
     }

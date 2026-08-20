@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ADMIN_VIEWS } from "@/lib/admin-views";
+import { getViewProperty } from "@/lib/admin-properties";
 import CellValue, { releaseHref } from "@/components/admin/cell-value";
 
 // Renderer for the built-in (system) views. Tab switching lives in
@@ -81,6 +82,30 @@ export default function ReleasesTable({ viewKey, initialQuery = "" }) {
     load(query, nextPage);
   }
 
+  async function toggleCheckbox(row, column) {
+    setError("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/releases/${encodeURIComponent(row.unified_record_id)}/property`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ column: column.key, value: !row[column.key] })
+        }
+      );
+      const body = await response.json();
+
+      if (!response.ok) {
+        throw new Error(body?.error || "Could not update the checkbox.");
+      }
+
+      load(query, page);
+    } catch (toggleError) {
+      setError(toggleError.message);
+    }
+  }
+
   const columns = data?.view?.columns || ADMIN_VIEWS[viewKey]?.columns || [];
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
@@ -116,11 +141,31 @@ export default function ReleasesTable({ viewKey, initialQuery = "" }) {
             <tbody>
               {data.rows.map((row) => (
                 <tr key={row.unified_record_id} onClick={() => router.push(releaseHref(row))}>
-                  {columns.map((column) => (
-                    <td key={column.key}>
-                      <CellValue column={column} row={row} />
-                    </td>
-                  ))}
+                  {columns.map((column) => {
+                    const isCheckbox =
+                      column.render === "check" &&
+                      getViewProperty(column.key)?.type === "checkbox";
+
+                    return (
+                      <td key={column.key}>
+                        {isCheckbox ? (
+                          <button
+                            type="button"
+                            className="admin-check-toggle"
+                            title={`Click to ${row[column.key] ? "uncheck" : "check"} ${column.label}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleCheckbox(row, column);
+                            }}
+                          >
+                            <CellValue column={column} row={row} />
+                          </button>
+                        ) : (
+                          <CellValue column={column} row={row} />
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

@@ -818,9 +818,10 @@ export default function PortalApp({ initialSession }) {
                         submission. Submission type is locked while editing.
                       </div>
                     ) : null}
-                    {isInternal ? (
-                      <div className="release-switcher__grid">
-                        {Object.entries(FORM_KIND_TITLES).map(([kind, label]) => (
+                    <div className="release-switcher__grid">
+                        {Object.entries(FORM_KIND_TITLES)
+                          .filter(([kind]) => kind !== "publishing" || isInternal)
+                          .map(([kind, label]) => (
                           <button
                             type="button"
                             key={kind}
@@ -837,8 +838,7 @@ export default function PortalApp({ initialSession }) {
                           </button>
                         ))}
                       </div>
-                    ) : null}
-                    {isInternal && formKind === "release" ? (
+                    {formKind === "release" ? (
                       <div className="release-switcher__divider" aria-hidden="true" />
                     ) : null}
                     {formKind === "release" ? (
@@ -1682,7 +1682,7 @@ export default function PortalApp({ initialSession }) {
                     <h3 className="step-title">Video Release Submission</h3>
                     <p className="step-description">
                       Check the Release Schedule first to avoid duplicate submissions. This form is for
-                      video releases distributed through FUGA. See the{" "}
+                      video releases distributed through Artist House. See the{" "}
                       <button type="button" className="sop-link" onClick={() => setShowSop(true)}>
                         Video Delivery SOP
                       </button>{" "}

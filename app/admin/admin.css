@@ -1033,6 +1033,56 @@ th:hover .admin-th-resize {
   border-radius: 0;
 }
 
+/* Checkbox toggles + record extras */
+.admin-check-toggle {
+  background: none;
+  border: 0;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.admin-check-toggle:hover {
+  background: #efefef;
+}
+
+.admin-record-extras {
+  margin-top: 8px;
+}
+
+.admin-record-extras__checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.admin-record-extras__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--light-gray);
+  border-radius: 10px;
+  background: var(--white);
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-record-extras__check:hover {
+  border-color: var(--accent-red);
+}
+
+.admin-record-extras__check.is-checked {
+  border-color: #1d7a3c;
+  background: #f2faf5;
+}
+
+.admin-record-extras__check:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Allowed users */
 .admin-allowlist__add {
   display: flex;

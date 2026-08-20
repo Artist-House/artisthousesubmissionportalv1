@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import CellValue, { releaseHref } from "@/components/admin/cell-value";
 import { useViewRows } from "@/components/admin/use-view-rows";
-import { getViewProperty, INLINE_EDITABLE } from "@/lib/admin-properties";
+import { INLINE_EDITABLE } from "@/lib/admin-properties";
+import { useProperties } from "@/components/admin/properties-context";
 import { buildFormValuesFromUnifiedRow } from "@/lib/admin-form-config";
 import { deriveKindFromRow } from "@/lib/unified-mapping";
 
@@ -23,6 +24,7 @@ function groupLabel(row, property) {
 }
 
 export default function ViewTable({ config, updateConfig }) {
+  const { getProperty } = useProperties();
   const [page, setPage] = useState(1);
   const grouped = Boolean(config.groupBy);
   const { rows, total, isLoading, error, reload } = useViewRows(config, {
@@ -37,9 +39,9 @@ export default function ViewTable({ config, updateConfig }) {
   const columns = useMemo(
     () =>
       (config.visibleProperties || [])
-        .map((key) => getViewProperty(key))
+        .map((key) => getProperty(key))
         .filter(Boolean),
-    [config.visibleProperties]
+    [config.visibleProperties, getProperty]
   );
 
   const groups = useMemo(() => {
@@ -47,7 +49,7 @@ export default function ViewTable({ config, updateConfig }) {
       return [{ label: null, rows }];
     }
 
-    const property = getViewProperty(config.groupBy);
+    const property = getProperty(config.groupBy);
 
     if (!property) {
       return [{ label: null, rows }];
@@ -154,6 +156,30 @@ export default function ViewTable({ config, updateConfig }) {
     }
   }
 
+  async function toggleCheckbox(row, column) {
+    setEditError("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/releases/${encodeURIComponent(row.unified_record_id)}/property`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ column: column.key, value: !row[column.key] })
+        }
+      );
+      const body = await response.json();
+
+      if (!response.ok) {
+        throw new Error(body?.error || "Could not update the checkbox.");
+      }
+
+      reload();
+    } catch (toggleError) {
+      setEditError(toggleError.message);
+    }
+  }
+
   function renderEditor(row, column) {
     const editable = INLINE_EDITABLE[column.key];
 
@@ -256,6 +282,22 @@ export default function ViewTable({ config, updateConfig }) {
                         editing.rowId === row.unified_record_id &&
                         editing.column === column.key;
                       const editable = Boolean(INLINE_EDITABLE[column.key]);
+                      const isCheckbox = column.type === "checkbox";
+
+                      if (isCheckbox) {
+                        return (
+                          <td key={column.key}>
+                            <button
+                              type="button"
+                              className="admin-check-toggle"
+                              title={`Click to ${row[column.key] ? "uncheck" : "check"} ${column.label}`}
+                              onClick={() => toggleCheckbox(row, column)}
+                            >
+                              <CellValue column={column} row={row} />
+                            </button>
+                          </td>
+                        );
+                      }
 
                       return (
                         <td
