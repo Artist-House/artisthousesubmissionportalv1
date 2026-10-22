@@ -20,10 +20,27 @@ import {
 } from "@/lib/release-fields";
 import { sendSubmissionNotificationEmail } from "@/lib/email";
 import { syncNotionPageSafely } from "@/lib/supabase";
-import { ASSET_KINDS, attachAssetsToPage, recordAsset } from "@/lib/storage";
+import {
+  ASSET_KINDS,
+  attachAssetsToPage,
+  downloadAsset,
+  NOTION_ATTACH_MAX_BYTES,
+  recordAsset
+} from "@/lib/storage";
 import { INTERNAL_EMAIL_DOMAIN, normalizeDistributor } from "@/lib/release-config";
 
 export const runtime = "nodejs";
+// Mirroring an attachment pulls it from Storage and pushes it to Notion inside
+// this request, which can outlast the default limit for files near 18 MB.
+export const maxDuration = 60;
+
+// Where each mirrored kind lands: as a real Notion attachment via filePayload,
+// or as a permalink in its URL field when it is too large or the copy fails.
+const ATTACH_SLOTS = {
+  lyrics: { fileKey: "lyricsFile", urlField: "lyricsUrl" },
+  cover_art: { fileKey: "coverArtFile", urlField: "coverArtUrl" },
+  thumbnail: { fileKey: "thumbnailFile", urlField: null }
+};
 
 function isInternalEmail(email) {
   return String(email || "").trim().toLowerCase().endsWith(INTERNAL_EMAIL_DOMAIN);
@@ -86,10 +103,34 @@ export async function POST(request) {
         uploadedBy: session.email || ""
       });
 
-      const field = ASSET_KINDS[asset.kind].notionUrlField;
+      const permalink = `${request.nextUrl.origin}/api/assets/${recorded.asset_id}/download`;
+      const { notionUrlField, notionAttach } = ASSET_KINDS[asset.kind];
 
-      if (field) {
-        assetLinks[field] = `${request.nextUrl.origin}/api/assets/${recorded.asset_id}/download`;
+      if (notionUrlField) {
+        assetLinks[notionUrlField] = permalink;
+        continue;
+      }
+
+      const slot = notionAttach ? ATTACH_SLOTS[asset.kind] : null;
+
+      if (!slot) {
+        continue;
+      }
+
+      if (Number(asset.sizeBytes) <= NOTION_ATTACH_MAX_BYTES) {
+        try {
+          const blob = await downloadAsset(asset.storagePath);
+          filePayload[slot.fileKey] = new File([blob], asset.fileName || "file", {
+            type: asset.mimeType || blob.type || "application/octet-stream"
+          });
+          continue;
+        } catch (error) {
+          console.error("Could not mirror asset into Notion, linking instead", recorded.asset_id, error);
+        }
+      }
+
+      if (slot.urlField) {
+        assetLinks[slot.urlField] = permalink;
       }
     }
 

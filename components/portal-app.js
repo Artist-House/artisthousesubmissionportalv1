@@ -199,6 +199,30 @@ function CheckboxGroup({ options, values, onToggle }) {
   );
 }
 
+// Always resolves, so a failed submit can never leave the button stuck on "Submitting...".
+// Vercel rejects oversized bodies (413) with a non-JSON page before the route runs.
+async function postSubmission(body) {
+  try {
+    const response = await fetch("/api/submit-release", { method: "POST", body });
+    const result = await response.json().catch(() => ({}));
+
+    if (response.ok) {
+      return { ok: true, ...result };
+    }
+
+    if (response.status === 413) {
+      return {
+        ok: false,
+        error: "Attached files are too large to send (4.5 MB limit). Share them as a link instead."
+      };
+    }
+
+    return { ok: false, error: result.error || `Submission failed (${response.status}).` };
+  } catch {
+    return { ok: false, error: "Could not reach Artist House. Check your connection and try again." };
+  }
+}
+
 function getTrackPreview(value) {
   return value
     .split("\n")
@@ -537,26 +561,10 @@ export default function PortalApp({ initialSession }) {
     const body = new FormData();
     body.append("payload", JSON.stringify(payload));
 
-    if (files.lyricsFile) {
-      body.append("lyricsFile", files.lyricsFile);
-    }
+    const result = await postSubmission(body);
 
-    if (files.coverArtFile) {
-      body.append("coverArtFile", files.coverArtFile);
-    }
-
-    const response = await fetch("/api/submit-release", {
-      method: "POST",
-      body
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      setStatus({
-        type: "error",
-        message: result.error || "Submission failed."
-      });
+    if (!result.ok) {
+      setStatus({ type: "error", message: result.error });
       return;
     }
 
@@ -628,18 +636,10 @@ export default function PortalApp({ initialSession }) {
       body.append("thumbnailFile", files.thumbnailFile);
     }
 
-    const response = await fetch("/api/submit-release", {
-      method: "POST",
-      body
-    });
+    const result = await postSubmission(body);
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      setStatus({
-        type: "error",
-        message: result.error || "Submission failed."
-      });
+    if (!result.ok) {
+      setStatus({ type: "error", message: result.error });
       return;
     }
 
@@ -1212,31 +1212,18 @@ export default function PortalApp({ initialSession }) {
                             placeholder="https://"
                           />
                         </div>
-                        <div className="field">
-                          <label className="field-label" htmlFor="lyricsFile">
-                            Attach Lyrics
-                          </label>
-                          <input
-                            id="lyricsFile"
-                            className="file-input"
-                            type="file"
-                            onChange={(event) =>
-                              setFiles((current) => ({
-                                ...current,
-                                lyricsFile: event.target.files?.[0] || null
-                              }))
-                            }
-                          />
-                          {files.lyricsFile ? (
-                            <div className="file-meta">
-                              <strong>Selected File</strong>
-                              {files.lyricsFile.name}
-                            </div>
-                          ) : null}
-                          {editingPageId && existingAssets.lyrics && !files.lyricsFile ? (
-                            <div className="field-help">An existing lyrics attachment will be kept unless you replace it.</div>
-                          ) : null}
-                        </div>
+                        <AssetUpload
+                          kind="lyrics"
+                          label="Attach Lyrics"
+                          submissionId={submissionId}
+                          asset={assets.lyrics}
+                          onChange={(asset) => setAssets((current) => ({ ...current, lyrics: asset }))}
+                          help={
+                            editingPageId && existingAssets.lyrics && !assets.lyrics
+                              ? "An existing lyrics attachment will be kept unless you replace it."
+                              : ""
+                          }
+                        />
                         <div className="field">
                           <label className="field-label" htmlFor="coverArtUrl">
                             Cover Art URL
@@ -1250,32 +1237,19 @@ export default function PortalApp({ initialSession }) {
                             placeholder="https://"
                           />
                         </div>
-                        <div className="field">
-                          <label className="field-label" htmlFor="coverArtFile">
-                            Attach Cover Art
-                          </label>
-                          <input
-                            id="coverArtFile"
-                            className="file-input"
-                            type="file"
-                            accept="image/*"
-                            onChange={(event) =>
-                              setFiles((current) => ({
-                                ...current,
-                                coverArtFile: event.target.files?.[0] || null
-                              }))
-                            }
-                          />
-                          {files.coverArtFile ? (
-                            <div className="file-meta">
-                              <strong>Selected File</strong>
-                              {files.coverArtFile.name}
-                            </div>
-                          ) : null}
-                          {editingPageId && existingAssets.coverArt && !files.coverArtFile ? (
-                            <div className="field-help">An existing cover art attachment will be kept unless you replace it.</div>
-                          ) : null}
-                        </div>
+                        <AssetUpload
+                          kind="cover_art"
+                          label="Attach Cover Art"
+                          accept="image/*"
+                          submissionId={submissionId}
+                          asset={assets.cover_art}
+                          onChange={(asset) => setAssets((current) => ({ ...current, cover_art: asset }))}
+                          help={
+                            editingPageId && existingAssets.coverArt && !assets.cover_art
+                              ? "An existing cover art attachment will be kept unless you replace it."
+                              : ""
+                          }
+                        />
                         <div className="field">
                           <label className="field-label" htmlFor="dolbyAtmosLink">
                             Dolby Atmos Mix Link
